@@ -3,8 +3,13 @@ module "label" {
   # Cloud Posse recommends pinning every module to a specific version
   version = "0.25.0"
 
-  namespace  = var.namespace
-  stage      = var.stage
+  # namespace  = var.namespace
+  # stage      = var.stage
+  # environment = var.environment
+  # label_order = var.label_order
+  namespace   = var.namespace
+  stage       = var.stage
   environment = var.environment
   label_order = var.label_order
+  name        = var.name
 }
