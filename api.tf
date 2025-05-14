@@ -112,68 +112,112 @@ module "cors_course" {
 
 # COURSES POST
 
-# resource "aws_api_gateway_method" "post_courses" {
+resource "aws_api_gateway_resource" "save_course" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  parent_id   = aws_api_gateway_resource.courses.id
+  path_part   = "save"
+}
+
+resource "aws_api_gateway_method" "save_course" {
+  rest_api_id   = aws_api_gateway_rest_api.this.id
+  resource_id   = aws_api_gateway_resource.save_course.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "save_course" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.save_course.id
+  http_method = aws_api_gateway_method.save_course.http_method
+
+  type                    = "AWS"
+  integration_http_method = "POST"
+  uri = module.lambda_functions.lambda_save_courses_invoke_arn
+}
+
+resource "aws_api_gateway_method_response" "save_course" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.save_course.id
+  http_method = aws_api_gateway_method.save_course.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "save_course" {
+  rest_api_id = aws_api_gateway_rest_api.this.id
+  resource_id = aws_api_gateway_resource.save_course.id
+  http_method = aws_api_gateway_method.save_course.http_method
+  status_code = aws_api_gateway_method_response.save_course.status_code
+
+ response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" =  "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'",
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+}
+}
+
+resource "aws_lambda_permission" "save_course" {
+  statement_id = "AllowExecutionFromAPIGateway"
+  action = "lambda:InvokeFunction"
+  function_name = module.lambda_functions.lambda_save_courses_arn
+  principal = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
+}
+
+# resource "aws_api_gateway_method" "options_save_course" {
+#   rest_api_id   = aws_api_gateway_rest_api.api.id
+#   resource_id   = aws_api_gateway_resource.save_course.id
+#   http_method   = "OPTIONS"
 #   authorization = "NONE"
-#   http_method   = "POST"
-#   resource_id   = aws_api_gateway_resource.courses.id
-#   rest_api_id   = aws_api_gateway_rest_api.this.id
 # }
 
-# resource "aws_api_gateway_integration" "post_courses" {
-#   rest_api_id             = aws_api_gateway_rest_api.this.id
-#   resource_id             = aws_api_gateway_resource.courses.id
-#   http_method             = aws_api_gateway_method.post_courses.http_method
-#   integration_http_method = "POST"
-#   type                    = "AWS"
-#   uri                     = module.lambda_functions.lambda_save_course_invoke_arn
-#   request_parameters      = {
-#     "integration.request.header.X-Authorization" = "'static'"
+# resource "aws_api_gateway_integration" "options_save_course" {
+#   rest_api_id = aws_api_gateway_rest_api.api.id
+#   resource_id = aws_api_gateway_resource.save_course.id
+#   http_method = aws_api_gateway_method.options_save_course.http_method
+
+#   type                    = "MOCK"
+
+#    request_templates = {
+#     "application/json" = "{\"statusCode\": 200}"
 #   }
-#   request_templates = {
-#     "application/json" = <<EOF
-# {
-#   "body" : $input.json('$')
-# }
-# EOF
-#   }
-#   content_handling = "CONVERT_TO_TEXT"
 # }
 
-# resource "aws_api_gateway_method_response" "post_courses" {
-#   rest_api_id     = aws_api_gateway_rest_api.this.id
-#   resource_id     = aws_api_gateway_resource.courses.id
-#   http_method     = aws_api_gateway_method.post_courses.http_method
-#   status_code     = "200"
-#   response_models = {
+# resource "aws_api_gateway_method_response" "options_save_course" {
+#   rest_api_id = aws_api_gateway_rest_api.api.id
+#   resource_id = aws_api_gateway_resource.save_course.id
+#   http_method = aws_api_gateway_method.options_save_course.http_method
+#   status_code = "200"
+
+#     response_models = {
 #     "application/json" = "Empty"
 #   }
+
 #   response_parameters = {
 #     "method.response.header.Access-Control-Allow-Headers" = true,
 #     "method.response.header.Access-Control-Allow-Methods" = true,
-#     "method.response.header.Access-Control-Allow-Origin"  = true
+#     "method.response.header.Access-Control-Allow-Origin" = true
 #   }
 # }
 
-# resource "aws_api_gateway_integration_response" "post_courses" {
-#   rest_api_id = aws_api_gateway_rest_api.this.id
-#   resource_id = aws_api_gateway_resource.courses.id
-#   http_method = aws_api_gateway_method.post_courses.http_method
-#   status_code = aws_api_gateway_method_response.post_courses.status_code
+# resource "aws_api_gateway_integration_response" "options_save_course" {
+#   depends_on = [ aws_api_gateway_integration.options_save_course ]
+#   rest_api_id = aws_api_gateway_rest_api.api.id
+#   resource_id = aws_api_gateway_resource.save_course.id
+#   http_method = aws_api_gateway_method.options_save_course.http_method
+#   status_code = "200"
 
-#   response_parameters = {
-#     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-#     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
-#     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-#   }
+#  response_parameters = {
+#     "method.response.header.Access-Control-Allow-Headers" =  "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+#     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT,DELETE'",
+#     "method.response.header.Access-Control-Allow-Origin" = "'*'"
 # }
-
-# resource "aws_lambda_permission" "allow_apigw_invoke_save_course" {
-#   statement_id  = "AllowAPIGatewayInvoke"
-#   action        = "lambda:InvokeFunction"
-#   function_name = module.lambda_functions.lambda_save_courses_function_name
-#   principal     = "apigateway.amazonaws.com"
-
-#   source_arn = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
 # }
 
 # AUTHORS GET
