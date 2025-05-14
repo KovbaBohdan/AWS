@@ -204,7 +204,7 @@ resource "aws_api_gateway_method_response" "get_authors" {
   resource_id     = aws_api_gateway_resource.authors.id
   http_method     = aws_api_gateway_method.get_authors.http_method
   status_code     = "200"
-  response_models = { "application/json" = "Empty" }
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true,
     "method.response.header.Access-Control-Allow-Methods" = true,
@@ -225,6 +225,14 @@ resource "aws_api_gateway_integration_response" "get_authors" {
   }
 }
 
+resource "aws_lambda_permission" "get_all_authors" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_functions.get_all_authors_arn
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
+}
+
 module "cors_author" {
   source  = "squidfunk/api-gateway-enable-cors/aws"
   version = "0.3.3"
@@ -237,24 +245,6 @@ module "cors_author" {
 #   name                  = "validate_request_body"
 #   rest_api_id           = aws_api_gateway_rest_api.this.id
 #   validate_request_body = true
-# }
-
-# resource "aws_api_gateway_deployment" "this" {
-#   rest_api_id = aws_api_gateway_rest_api.this.id
-
-#   triggers = {
-#     redeployment = sha1(jsonencode(aws_api_gateway_rest_api.this.body))
-#   }
-
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-# }
-
-# resource "aws_api_gateway_stage" "dev" {
-#   deployment_id = aws_api_gateway_deployment.this.id
-#   rest_api_id   = aws_api_gateway_rest_api.this.id
-#   stage_name    = "dev"
 # }
 
 # resource "aws_api_gateway_method" "courses_option" {
