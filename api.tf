@@ -34,9 +34,9 @@ resource "aws_api_gateway_deployment" "this" {
 
   depends_on = [
     aws_api_gateway_method.get_authors,
-    aws_api_gateway_method.get_courses,
+    aws_api_gateway_method.get_all_courses,
     aws_api_gateway_integration.get_authors,
-    aws_api_gateway_integration.get_courses,
+    aws_api_gateway_integration.get_all_courses,
   ]
 }
 
@@ -50,37 +50,28 @@ resource "aws_api_gateway_resource" "courses" {
 
 # COURSES GET
 
-resource "aws_api_gateway_method" "get_courses" {
+resource "aws_api_gateway_method" "get_all_courses" {
   authorization = "NONE"
   http_method   = "GET"
   resource_id   = aws_api_gateway_resource.courses.id
   rest_api_id   = aws_api_gateway_rest_api.this.id
 }
 
-resource "aws_api_gateway_integration" "get_courses" {
+resource "aws_api_gateway_integration" "get_all_courses" {
   rest_api_id             = aws_api_gateway_rest_api.this.id
   resource_id             = aws_api_gateway_resource.courses.id
-  http_method             = aws_api_gateway_method.get_courses.http_method
+  http_method             = aws_api_gateway_method.get_all_courses.http_method
   integration_http_method = "POST"
   type                    = "AWS"
   uri                     = module.lambda_functions.lambda_courses_invoke_arn
-  request_parameters      = { "integration.request.header.X-Authorization" = "'static'" }
-  request_templates = {
-    "application/xml" = <<EOF
-  {
-     "body" : $input.json('$')
-  }
-  EOF
-  }
-  content_handling = "CONVERT_TO_TEXT"
 }
 
-resource "aws_api_gateway_method_response" "get_courses" {
+resource "aws_api_gateway_method_response" "get_all_courses" {
   rest_api_id     = aws_api_gateway_rest_api.this.id
   resource_id     = aws_api_gateway_resource.courses.id
-  http_method     = aws_api_gateway_method.get_courses.http_method
+  http_method     = aws_api_gateway_method.get_all_courses.http_method
   status_code     = "200"
-  response_models = { "application/json" = "Empty" }
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true,
     "method.response.header.Access-Control-Allow-Methods" = true,
@@ -88,11 +79,11 @@ resource "aws_api_gateway_method_response" "get_courses" {
   }
 }
 
-resource "aws_api_gateway_integration_response" "get_courses" {
+resource "aws_api_gateway_integration_response" "get_all_courses" {
   rest_api_id = aws_api_gateway_rest_api.this.id
   resource_id = aws_api_gateway_resource.courses.id
-  http_method = aws_api_gateway_method.get_courses.http_method
-  status_code = aws_api_gateway_method_response.get_courses.status_code
+  http_method = aws_api_gateway_method.get_all_courses.http_method
+  status_code = aws_api_gateway_method_response.get_all_courses.status_code
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
@@ -100,6 +91,16 @@ resource "aws_api_gateway_integration_response" "get_courses" {
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
+
+resource "aws_lambda_permission" "get_all_courses" {
+  statement_id = "AllowExecutionFromAPIGateway"
+  action = "lambda:InvokeFunction"
+  function_name = module.lambda_functions.get_all_courses_arn
+  principal = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_api_gateway_rest_api.this.execution_arn}/*/*"
+}
+
 
 module "cors_course" {
   source  = "squidfunk/api-gateway-enable-cors/aws"

@@ -15,6 +15,10 @@ output "get_all_authors_arn" {
     value = module.lambda_get_all_authors.lambda_function_arn
 }
 
+output "get_all_courses_arn" {
+    value = module.lambda_get_all_courses.lambda_function_arn
+}
+
 output "lambda_courses_invoke_arn"{
     value = module.lambda_get_all_courses.lambda_function_invoke_arn
 }
