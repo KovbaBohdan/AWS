@@ -24,6 +24,8 @@ output "lambda_get_all_authors_invoke_arn"{
 #     value = module.lambda_save_courses.lambda_function_invoke_arn
 # }
 
+
+
 # output "lambda_save_courses_function_name" {
 #   value = module.lambda_save_courses.lambda_function_name
 # }
