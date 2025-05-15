@@ -35,8 +35,16 @@ resource "aws_api_gateway_deployment" "this" {
   depends_on = [
     aws_api_gateway_method.get_authors,
     aws_api_gateway_method.get_all_courses,
+    aws_api_gateway_method.save_course,
+    aws_api_gateway_method.get_course,
+    aws_api_gateway_method.delete_course,
+    aws_api_gateway_method.update_course,
     aws_api_gateway_integration.get_authors,
     aws_api_gateway_integration.get_all_courses,
+    aws_api_gateway_integration.save_course,
+    aws_api_gateway_integration.get_course,
+    aws_api_gateway_integration.delete_course,
+    aws_api_gateway_integration.update_course,
   ]
 }
 
@@ -111,12 +119,6 @@ module "cors_course" {
 }
 
 # COURSES POST
-
-# resource "aws_api_gateway_resource" "save_course" {
-#   rest_api_id = aws_api_gateway_rest_api.this.id
-#   parent_id   = aws_api_gateway_resource.courses.id
-#   path_part   = "save"
-# }
 
 resource "aws_api_gateway_method" "save_course" {
   rest_api_id   = aws_api_gateway_rest_api.this.id
